@@ -9,8 +9,8 @@ let beep = new Array(rhythmNum);
 let prevTime = 0;
 let nowTime = 0;
 let keyName = ["J","F"];
-let tuplet = [[4,2],[4,3],[3,5],[4,7],[5,7]];
-let levelColor = ["#000020","#002000","#200020","#202000","#400000"];
+let tuplet = [[4,8],[4,6],[8,6],[4,9],[4,3],[3,5],[4,5],[4,7],[8,7]];
+let levelColor = ["#000060","#000040","#000020","#002000","#200020","#202000","#400000","#600000","#800000","#A00000"];
 let level = 0;
 let blockBeep;
 let blockBeep2;
@@ -20,13 +20,14 @@ let scoreList = new Array();
 let auto = false;
 // 二次元配列
 let inputTiming = new Array(rhythmNum);
-let howtoplay = "あそび方\n JキーとKキーでポリリズムをキープしましょう\n スペースキーを押すとスタートし、4拍の合図の後開始です\n 4小節間でどのくらいうまくリズムキープできたかを採点します。\n お手本は0キーを押してオートを有効にすると見られます\n 3,4キーでリズムの変更、1,2キーでBPMの変更が可能です"
+let howtoplay = "あそび方\n JキーとFキーでポリリズムをキープしましょう\n スペースキーを押すとスタートし、4拍の合図の後開始です\n 4小節間でどのくらいうまくリズムキープできたかを採点します\n お手本は0キーを押してオートを有効にすると見られます\n 3,4キーでリズムの変更、1,2キーでBPMの変更が可能です"
 
 
 
 function preload() {
     beep[0] = loadSound(resourcePath + 'bass.mp3');
     beep[1] = loadSound(resourcePath + 'hat.mp3');
+    beep[2] = loadSound(resourcePath + 'snare.mp3');
     blockBeep = loadSound(resourcePath + 'block.wav');
     blockBeep2 = loadSound(resourcePath + 'block2.wav');
     crap = loadSound(resourcePath + 'crap.mp3');
@@ -167,6 +168,7 @@ function drawNowTimeLine(y, leftX, rightX, prevTime, time, bpm, tuplet, beepId, 
 function playSoundWhenTuplet(time, prevTime, bpm, tuplet, i, beep){
     if(i==0){
         if(nowTime == 0){
+            beep.stop();
             beep.play();
         }
     }else{
@@ -174,6 +176,7 @@ function playSoundWhenTuplet(time, prevTime, bpm, tuplet, i, beep){
         // bpmのときtupletのi番目が何ミリ秒か
         let t = 60*4 / bpm * 1000 / tuplet * i;
         if (prevTime < t && t <= time) {
+            beep.stop();
             beep.play();
         }
     }
@@ -190,6 +193,9 @@ function setup() {
 
 
 function draw() {
+    rhythmNum = tuplet[level].length;
+
+
     drawBackground();
     // タイトル描画
     noStroke();
@@ -335,6 +341,7 @@ function keyPressed() {
         if (keyCode == keyName[i].charCodeAt()) {
             inputTiming[i].push(stopwatch.getTimeMs());
             // おとをならす
+            beep[i].stop();
             beep[i].play();
             // エフェクトを追加
             if(gameState > 0)
@@ -370,14 +377,13 @@ function calcScore() {
     for(let zure=-300; zure<=300; zure+=20){
         let score = 10000;
         for (let i = 0; i < rhythmNum; i++) {
-            console.log(inputTiming[i].length);
             for (let j = 1; j < tuplet[level][i]; j++) {
                 let t = 60*4 / bpm * 1000 / tuplet[level][i] * j;
                 let min = 100000000;
                 for (let k = 0; k < inputTiming[i].length; k++) {
                     min = Math.min(min, Math.abs(inputTiming[i][k]+zure - t));
                 }
-                score -= min;
+                score -= min*2;
             }
             // 余計な入力を減点
             score -= Math.max(0, (inputTiming[i].length - 1 - tuplet[level][i]) * 1000);
